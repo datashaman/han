@@ -877,6 +877,46 @@ describe('findClaudeExecutable', () => {
     expect(expectedMessage).toContain('Claude CLI not found');
     expect(expectedMessage).toContain('https://claude.ai/code');
   });
+
+  test('uses CLAUDE_BIN environment variable when set', () => {
+    const originalClaudeBin = process.env.CLAUDE_BIN;
+    try {
+      // Point CLAUDE_BIN to bash, which is guaranteed to exist and resolve
+      process.env.CLAUDE_BIN = 'bash';
+      const result = findClaudeExecutable();
+      expect(typeof result).toBe('string');
+      expect(result).toContain('bash');
+    } finally {
+      if (originalClaudeBin !== undefined) {
+        process.env.CLAUDE_BIN = originalClaudeBin;
+      } else {
+        delete process.env.CLAUDE_BIN;
+      }
+    }
+  });
+
+  test('falls back to default when CLAUDE_BIN executable not found', () => {
+    const originalClaudeBin = process.env.CLAUDE_BIN;
+    try {
+      // Point CLAUDE_BIN to a non-existent executable
+      process.env.CLAUDE_BIN = 'nonexistent-binary-that-does-not-exist-12345';
+      // Should fall back to finding claude in PATH or common locations
+      try {
+        const result = findClaudeExecutable();
+        // If claude is installed, it finds it via fallback
+        expect(typeof result).toBe('string');
+      } catch (error) {
+        // If claude is not installed either, we get the standard error
+        expect((error as Error).message).toContain('Claude CLI not found');
+      }
+    } finally {
+      if (originalClaudeBin !== undefined) {
+        process.env.CLAUDE_BIN = originalClaudeBin;
+      } else {
+        delete process.env.CLAUDE_BIN;
+      }
+    }
+  });
 });
 
 describe('MarketplacePlugin interface', () => {

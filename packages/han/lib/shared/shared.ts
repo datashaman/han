@@ -383,6 +383,22 @@ function getBasePrompt(): string {
  * Find the Claude CLI executable in PATH
  */
 export function findClaudeExecutable(): string {
+  // Allow override via CLAUDE_BIN environment variable
+  const envPath = process.env.CLAUDE_BIN;
+  if (envPath) {
+    try {
+      const resolvedPath = execSync(`which ${envPath}`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim();
+      if (resolvedPath && existsSync(resolvedPath)) {
+        return resolvedPath;
+      }
+    } catch {
+      // CLAUDE_BIN not found in PATH, fall through to defaults
+    }
+  }
+
   try {
     const claudePath = execSync('which claude', {
       encoding: 'utf-8',
