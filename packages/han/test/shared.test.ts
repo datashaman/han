@@ -881,11 +881,11 @@ describe('findClaudeExecutable', () => {
   test('uses CLAUDE_BIN environment variable when set', () => {
     const originalClaudeBin = process.env.CLAUDE_BIN;
     try {
-      // Point CLAUDE_BIN to bash, which is guaranteed to exist and resolve
-      process.env.CLAUDE_BIN = 'bash';
+      // Point CLAUDE_BIN to sh, the POSIX-required shell
+      process.env.CLAUDE_BIN = 'sh';
       const result = findClaudeExecutable();
       expect(typeof result).toBe('string');
-      expect(result).toContain('bash');
+      expect(result).toContain('sh');
     } finally {
       if (originalClaudeBin !== undefined) {
         process.env.CLAUDE_BIN = originalClaudeBin;
