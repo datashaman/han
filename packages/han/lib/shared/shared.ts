@@ -386,16 +386,20 @@ export function findClaudeExecutable(): string {
   // Allow override via CLAUDE_BIN environment variable
   const envPath = process.env.CLAUDE_BIN;
   if (envPath) {
-    try {
-      const resolvedPath = execSync(`which ${envPath}`, {
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }).trim();
+    // If it's an absolute path, use it directly
+    if (envPath.startsWith('/') && existsSync(envPath)) {
+      return envPath;
+    }
+    // Otherwise resolve via PATH using spawnSync to avoid shell injection
+    const result = Bun.spawnSync(['which', envPath], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    if (result.exitCode === 0) {
+      const resolvedPath = result.stdout.toString().trim();
       if (resolvedPath && existsSync(resolvedPath)) {
         return resolvedPath;
       }
-    } catch {
-      // CLAUDE_BIN not found in PATH, fall through to defaults
     }
   }
 
